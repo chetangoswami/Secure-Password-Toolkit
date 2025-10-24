@@ -1,0 +1,5 @@
+{
+  "name": "Secure Password Toolkit",
+  "description": "A comprehensive password security toolkit. Generate strong, random passwords and passphrases, or use the AI-powered auditor to analyze existing passwords for vulnerabilities and get actionable security advice.",
+  "requestFramePermissions": []
+}
