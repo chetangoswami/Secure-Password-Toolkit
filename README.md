@@ -1,5 +1,7 @@
 # Secure Password Toolkit 🛡️✨
 
+> **Live Demo:** [https://password-tk-cg.web.app](https://password-tk-cg.web.app)
+
 A comprehensive, AI-powered toolkit for generating, analyzing, and managing secure passwords and passphrases. Built with React, TypeScript, and the Google Gemini API, this application provides a suite of advanced features to enhance your digital security in a modern, user-friendly interface.
 
 *A screenshot of the application would go here.*
