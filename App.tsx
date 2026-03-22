@@ -5,7 +5,7 @@ import { usePasswordGenerator } from './hooks/usePasswordGenerator';
 import StrengthIndicator from './components/StrengthIndicator';
 import PasswordHistory from './components/PasswordHistory';
 import Tooltip from './components/Tooltip';
-import { CheckIcon, CopyIcon, ArrowRightIcon, RefreshIcon, SparklesIcon, SpinnerIcon, ExportIcon, AuditIcon, EyeIcon, EyeOffIcon, ShieldIcon, WarningIcon, LightbulbIcon, BulkIcon, KeyIcon } from './components/Icons';
+import { CheckIcon, CopyIcon, ArrowRightIcon, RefreshIcon, SparklesIcon, SpinnerIcon, ExportIcon, AuditIcon, EyeIcon, EyeOffIcon, ShieldIcon, WarningIcon, LightbulbIcon, BulkIcon, KeyIcon, GearIcon } from './components/Icons';
 import { SYMBOL_CHARS } from './constants';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -125,6 +125,28 @@ function App() {
     }
   });
 
+  // API Key State
+  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem('geminiApiKey') || '');
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [isApiKeyVisible, setIsApiKeyVisible] = useState(false);
+  const [showApiKeyPanel, setShowApiKeyPanel] = useState(false);
+
+  const handleSaveApiKey = () => {
+    const trimmed = apiKeyInput.trim();
+    if (trimmed) {
+      localStorage.setItem('geminiApiKey', trimmed);
+      setApiKey(trimmed);
+      setApiKeyInput('');
+      setShowApiKeyPanel(false);
+    }
+  };
+
+  const handleClearApiKey = () => {
+    localStorage.removeItem('geminiApiKey');
+    setApiKey('');
+    setApiKeyInput('');
+  };
+
   // AI Generation State
   const [aiPrompt, setAiPrompt] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -196,6 +218,11 @@ function App() {
   const handleAiGenerate = async () => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
 
+    if (!apiKey) {
+      setAiError('Please set your Gemini API key in the settings (⚙) above.');
+      return;
+    }
+
     if (generatorType === 'passphrase' && !aiPrompt.trim()) {
       setAiError('Please enter a theme for the AI.');
       return;
@@ -204,7 +231,7 @@ function App() {
     setAiError('');
   
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      const ai = new GoogleGenAI({ apiKey });
       
       let prompt = '';
       let responseSchema: any;
@@ -297,13 +324,17 @@ function App() {
         setAuditError('Please enter a password to audit.');
         return;
     }
+    if (!apiKey) {
+        setAuditError('Please set your Gemini API key in the settings (⚙) above.');
+        return;
+    }
     setIsAuditing(true);
     setAuditError('');
     setSuggestionError('');
     setAuditResult(null);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey });
 
         const prompt = `
             You are a cybersecurity expert specializing in password entropy and cracking techniques.
@@ -371,12 +402,16 @@ function App() {
   
   const handleGenerateWithSuggestions = async () => {
     if (!auditResult || !auditPassword) return;
+    if (!apiKey) {
+        setSuggestionError('Please set your Gemini API key in the settings (⚙) above.');
+        return;
+    }
 
     setIsGeneratingSuggestion(true);
     setSuggestionError('');
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey });
         
         const characterTypes = [];
         if (/[A-Z]/.test(auditPassword)) characterTypes.push("uppercase letters (A-Z)");
@@ -880,10 +915,73 @@ function App() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 font-mono">
       <div className="w-full max-w-lg mx-auto flex flex-col h-full">
-        <h1 className="text-slate-300 text-center text-lg sm:text-2xl font-bold mb-3 sm:mb-6 tracking-widest flex items-center justify-center gap-2 sm:gap-4 flex-shrink-0">
-          <KeyIcon />
-          PASSWORD TOOLKIT
-        </h1>
+        <div className="flex items-center justify-between mb-3 sm:mb-6 flex-shrink-0">
+          <h1 className="text-slate-300 text-lg sm:text-2xl font-bold tracking-widest flex items-center gap-2 sm:gap-4">
+            <KeyIcon />
+            PASSWORD TOOLKIT
+          </h1>
+          <Tooltip text={apiKey ? 'API Key is set (click to change)' : 'Set Gemini API Key'} align="right">
+            <button
+              onClick={() => setShowApiKeyPanel(prev => !prev)}
+              aria-label="Settings"
+              className={`transition-transform duration-300 ${showApiKeyPanel ? 'rotate-45' : ''}`}
+            >
+              <GearIcon className={`w-5 h-5 transition-colors ${apiKey ? 'text-emerald-400' : 'text-slate-500 hover:text-white'}`} />
+            </button>
+          </Tooltip>
+        </div>
+
+        {/* API Key Panel */}
+        {showApiKeyPanel && (
+          <div className="mb-3 sm:mb-4 bg-slate-900/70 border border-slate-700/60 rounded-xl p-4 animate-fade-in flex-shrink-0">
+            <h2 className="text-slate-300 font-bold text-sm mb-3 flex items-center gap-2">
+              <SparklesIcon className="w-4 h-4 text-emerald-400" />
+              Gemini API Key
+            </h2>
+            {apiKey ? (
+              <div className="flex items-center gap-3">
+                <p className="text-emerald-400 text-sm flex-1">✓ API key is saved and active</p>
+                <button
+                  onClick={handleClearApiKey}
+                  className="text-red-400 hover:text-red-300 text-xs border border-red-400/30 hover:border-red-400 rounded-md px-3 py-1.5 transition-colors"
+                >
+                  Clear Key
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-slate-400 text-xs mb-1">Enter your <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline hover:text-emerald-300">Google AI Studio API key</a> to enable AI features.</p>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type={isApiKeyVisible ? 'text' : 'password'}
+                      id="api-key-input"
+                      value={apiKeyInput}
+                      onChange={(e) => setApiKeyInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSaveApiKey()}
+                      placeholder="AIza..."
+                      className="w-full bg-slate-800 border-2 border-slate-600 rounded-lg pl-4 pr-10 py-2 text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                    />
+                    <button
+                      onClick={() => setIsApiKeyVisible(prev => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      aria-label={isApiKeyVisible ? 'Hide API key' : 'Show API key'}
+                    >
+                      {isApiKeyVisible ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleSaveApiKey}
+                    disabled={!apiKeyInput.trim()}
+                    className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-900 font-bold px-4 py-2 rounded-lg text-sm transition-colors"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
         <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden max-h-[calc(100vh-8rem)]">
             {/* Password Display */}
