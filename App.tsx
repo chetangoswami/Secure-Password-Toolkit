@@ -879,15 +879,15 @@ function App() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="w-full max-w-lg mx-auto">
-        <h1 className="text-slate-300 text-center text-lg sm:text-2xl font-bold mb-3 sm:mb-6 tracking-widest flex items-center justify-center gap-2 sm:gap-4">
+      <div className="w-full max-w-lg mx-auto flex flex-col h-full">
+        <h1 className="text-slate-300 text-center text-lg sm:text-2xl font-bold mb-3 sm:mb-6 tracking-widest flex items-center justify-center gap-2 sm:gap-4 flex-shrink-0">
           <KeyIcon />
           PASSWORD TOOLKIT
         </h1>
         
-        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50">
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden max-h-[calc(100vh-8rem)]">
             {/* Password Display */}
-            <div className="p-4 sm:p-6 flex justify-between items-center">
+            <div className="p-4 sm:p-6 flex justify-between items-center flex-shrink-0">
               <span className={`text-slate-100 text-2xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password ? 'opacity-100 password-glow' : 'opacity-50'}`}>
                 {password || (generatorType === 'bulk' ? 'Bulk Mode' : 'P4$5W0rD!')}
               </span>
@@ -906,7 +906,8 @@ function App() {
             </div>
 
             {/* Customization Panel */}
-            <div className="p-4 sm:p-6 border-t border-slate-700/50">
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-4 sm:p-6 border-t border-slate-700/50">
                 {/* Tabs */}
                 <div className="flex border-b border-slate-700 mb-4 sm:mb-6 bg-slate-800/50 rounded-t-lg p-1 text-sm sm:text-base">
                     <button 
@@ -1184,81 +1185,83 @@ function App() {
                     @keyframes fade-in { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } } 
                     .animate-fade-in { animation: fade-in 0.4s ease-in-out; }
                 `}</style>
-              
-              <div className="mt-4 sm:mt-8">
-                <div className="mb-4 sm:mb-6">
-                  <StrengthIndicator strength={strength} />
-                </div>
-                
-                {
-                  {
-                    'audit': (
-                      <Tooltip text="Get AI analysis">
-                           <button 
-                              onClick={handleAuditPassword}
-                              disabled={isAuditing || !auditPassword}
-                              className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
-                                        border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2
-                                        disabled:bg-slate-600 disabled:border-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed"
-                          >
-                              {isAuditing ? <SpinnerIcon /> : <AuditIcon />}
-                              Audit Password
-                          </button>
-                      </Tooltip>
-                    ),
-                    'bulk': (
-                      <Tooltip text={`Generate ${bulkCount} ${bulkGenType}(s)`}>
-                        <button 
-                          onClick={handleBulkGenerate}
-                          className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
-                                    border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
-                        >
-                          <BulkIcon />
-                          Generate Bulk
-                        </button>
-                      </Tooltip>
-                    ),
-                    'password': (
-                      <Tooltip text={'Create a new random password (Ctrl+G)'}>
-                        <button 
-                          onClick={handleGenerate}
-                          className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
-                                    border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
-                        >
-                          Generate
-                          <ArrowRightIcon/>
-                        </button>
-                      </Tooltip>
-                    ),
-                    'passphrase': (
-                      <Tooltip text={'Create a new random passphrase (Ctrl+G)'}>
-                        <button 
-                          onClick={handleGenerate}
-                          className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
-                                    border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
-                        >
-                          Generate
-                          <ArrowRightIcon/>
-                        </button>
-                      </Tooltip>
-                    ),
-                  }[generatorType]
-                }
               </div>
+
+              {history.length > 0 && (
+                <div className="border-t border-slate-700/50">
+                  <PasswordHistory 
+                    history={history} 
+                    onSelect={handleSelectFromHistory}
+                    onClear={handleClearHistory}
+                    onCopy={handleCopyToClipboard}
+                    onDeleteItem={handleDeleteItemFromHistory}
+                    onExport={handleExportHistory}
+                  />
+                </div>
+              )}
             </div>
 
-            {history.length > 0 && (
-              <div className="border-t border-slate-700/50">
-                <PasswordHistory 
-                  history={history} 
-                  onSelect={handleSelectFromHistory}
-                  onClear={handleClearHistory}
-                  onCopy={handleCopyToClipboard}
-                  onDeleteItem={handleDeleteItemFromHistory}
-                  onExport={handleExportHistory}
-                />
+            {/* Static Footer (Strength & Generate) */}
+            <div className="p-4 sm:p-6 border-t border-slate-700/50 bg-slate-900/80 flex-shrink-0 rounded-b-2xl">
+              <div className="mb-4 sm:mb-6">
+                <StrengthIndicator strength={strength} />
               </div>
-            )}
+              
+              {
+                {
+                  'audit': (
+                    <Tooltip text="Get AI analysis">
+                         <button 
+                            onClick={handleAuditPassword}
+                            disabled={isAuditing || !auditPassword}
+                            className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
+                                      border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2
+                                      disabled:bg-slate-600 disabled:border-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed"
+                        >
+                            {isAuditing ? <SpinnerIcon /> : <AuditIcon />}
+                            Audit Password
+                        </button>
+                    </Tooltip>
+                  ),
+                  'bulk': (
+                    <Tooltip text={`Generate ${bulkCount} ${bulkGenType}(s)`}>
+                      <button 
+                        onClick={handleBulkGenerate}
+                        className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
+                                  border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
+                      >
+                        <BulkIcon />
+                        Generate Bulk
+                      </button>
+                    </Tooltip>
+                  ),
+                  'password': (
+                    <Tooltip text={'Create a new random password (Ctrl+G)'}>
+                      <button 
+                        onClick={handleGenerate}
+                        className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
+                                  border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
+                      >
+                        Generate
+                        <ArrowRightIcon/>
+                      </button>
+                    </Tooltip>
+                  ),
+                  'passphrase': (
+                    <Tooltip text={'Create a new random passphrase (Ctrl+G)'}>
+                      <button 
+                        onClick={handleGenerate}
+                        className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
+                                  border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
+                      >
+                        Generate
+                        <ArrowRightIcon/>
+                      </button>
+                    </Tooltip>
+                  ),
+                }[generatorType]
+              }
+            </div>
         </div>
       </div>
     </main>
