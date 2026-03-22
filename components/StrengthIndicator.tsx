@@ -18,7 +18,7 @@ const StrengthIndicator: React.FC<StrengthIndicatorProps> = ({ strength }) => {
   const isNotEmpty = strength !== StrengthLevel.EMPTY;
 
   return (
-    <div className="bg-slate-900/50 p-4 rounded-lg">
+    <div className="bg-slate-900/50 p-3 sm:p-4 rounded-lg">
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-400 font-bold text-sm sm:text-base">STRENGTH</span>
         {isNotEmpty && <span className="text-white font-bold text-sm sm:text-lg">{text}</span>}

@@ -21,7 +21,7 @@ interface RuleControlProps {
 }
 
 const RuleControl: React.FC<RuleControlProps> = ({ id, label, checked, onCheckedChange, count, onCountChange, max }) => (
-    <div className="flex items-center py-2 select-none text-slate-200 text-base sm:text-lg group">
+    <div className="flex items-center py-1 sm:py-2 select-none text-slate-200 text-sm sm:text-base group">
         <label htmlFor={id} className="flex items-center cursor-pointer flex-grow">
             <div className="relative flex items-center justify-center w-6 h-6 mr-4 flex-shrink-0">
                 <input
@@ -751,10 +751,10 @@ function App() {
   
   const PasswordOptionsPanel = () => (
     <>
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <label htmlFor="length" className="text-slate-200 text-lg">Character Length</label>
-          <span className="text-emerald-400 text-3xl font-bold">{passwordOptions.length}</span>
+      <div className="mb-4 sm:mb-6">
+        <div className="flex justify-between items-center mb-2 sm:mb-4">
+          <label htmlFor="length" className="text-slate-200 text-sm sm:text-lg">Character Length</label>
+          <span className="text-emerald-400 text-2xl sm:text-3xl font-bold">{passwordOptions.length}</span>
         </div>
         <Tooltip text="Drag to change password length (6-32)">
             <input
@@ -878,17 +878,17 @@ function App() {
 
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 font-mono">
+    <main className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 font-mono">
       <div className="w-full max-w-lg mx-auto">
-        <h1 className="text-slate-300 text-center text-xl sm:text-2xl font-bold mb-6 tracking-widest flex items-center justify-center gap-4">
+        <h1 className="text-slate-300 text-center text-lg sm:text-2xl font-bold mb-3 sm:mb-6 tracking-widest flex items-center justify-center gap-2 sm:gap-4">
           <KeyIcon />
           PASSWORD TOOLKIT
         </h1>
         
         <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50">
             {/* Password Display */}
-            <div className="p-6 flex justify-between items-center">
-              <span className={`text-slate-100 text-3xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password ? 'opacity-100 password-glow' : 'opacity-50'}`}>
+            <div className="p-4 sm:p-6 flex justify-between items-center">
+              <span className={`text-slate-100 text-2xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password ? 'opacity-100 password-glow' : 'opacity-50'}`}>
                 {password || (generatorType === 'bulk' ? 'Bulk Mode' : 'P4$5W0rD!')}
               </span>
               <div className="flex items-center gap-3">
@@ -906,9 +906,9 @@ function App() {
             </div>
 
             {/* Customization Panel */}
-            <div className="p-6 border-t border-slate-700/50">
+            <div className="p-4 sm:p-6 border-t border-slate-700/50">
                 {/* Tabs */}
-                <div className="flex border-b border-slate-700 mb-6 bg-slate-800/50 rounded-t-lg p-1">
+                <div className="flex border-b border-slate-700 mb-4 sm:mb-6 bg-slate-800/50 rounded-t-lg p-1 text-sm sm:text-base">
                     <button 
                         onClick={() => handleSetGeneratorType('password')}
                         className={`flex-1 py-2 text-center font-bold transition-all duration-300 rounded-md ${generatorType === 'password' ? 'text-emerald-400 bg-slate-700/50' : 'text-slate-400 hover:text-white'}`}
@@ -1081,9 +1081,9 @@ function App() {
                 )}
                 
                 { generatorType !== 'audit' && generatorType !== 'bulk' && (
-                    <div className="mt-8 pt-6 border-t border-slate-700/50">
+                    <div className="mt-4 sm:mt-6 pt-4 border-t border-slate-700/50">
                         <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-slate-200 text-lg">Generate with AI</h3>
+                            <h3 className="text-slate-200 text-sm sm:text-lg">Generate with AI</h3>
                             <SparklesIcon/>
                         </div>
                         
@@ -1185,8 +1185,8 @@ function App() {
                     .animate-fade-in { animation: fade-in 0.4s ease-in-out; }
                 `}</style>
               
-              <div className="mt-8">
-                <div className="mb-6">
+              <div className="mt-4 sm:mt-8">
+                <div className="mb-4 sm:mb-6">
                   <StrengthIndicator strength={strength} />
                 </div>
                 
