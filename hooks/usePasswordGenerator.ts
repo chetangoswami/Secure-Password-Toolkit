@@ -6,6 +6,7 @@ import { WORD_LIST } from '../constants/words';
 export const usePasswordGenerator = () => {
   const [password, setPassword] = useState('');
   const [strength, setStrength] = useState<StrengthLevel>(StrengthLevel.EMPTY);
+  const [entropy, setEntropy] = useState<number>(0);
 
   const updateStrength = useCallback((type: 'password' | 'passphrase', options: PasswordOptions | PassphraseOptions, value?: string) => {
     const passwordOptions = options as PasswordOptions;
@@ -14,6 +15,7 @@ export const usePasswordGenerator = () => {
     const currentVal = value ?? password;
     if (currentVal === '') {
       setStrength(StrengthLevel.EMPTY);
+      setEntropy(0);
       return;
     }
 
@@ -85,6 +87,7 @@ export const usePasswordGenerator = () => {
       const wordCount = passphraseOptions.wordCount;
       if (wordCount === 0) {
         setStrength(StrengthLevel.EMPTY);
+        setEntropy(0);
         return;
       }
 
@@ -111,6 +114,7 @@ export const usePasswordGenerator = () => {
     } else {
       setStrength(StrengthLevel.EMPTY);
     }
+    setEntropy(Math.max(0, entropy));
   }, [password]);
 
   const generatePassword = useCallback((options: PasswordOptions): string => {
@@ -201,5 +205,5 @@ export const usePasswordGenerator = () => {
   }, []);
 
 
-  return { password, strength, generatePassword, generatePassphrase, setPassword, updateStrength };
+  return { password, strength, entropy, generatePassword, generatePassphrase, setPassword, updateStrength };
 };
