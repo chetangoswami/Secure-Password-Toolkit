@@ -108,7 +108,7 @@ function App() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isCopied, setIsCopied] = useState(false);
-  const { password, strength, generatePassword, generatePassphrase, setPassword, updateStrength } = usePasswordGenerator();
+  const { password, strength, entropy, generatePassword, generatePassphrase, setPassword, updateStrength } = usePasswordGenerator();
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const savedHistory = localStorage.getItem('passwordHistory');
@@ -1315,7 +1315,7 @@ function App() {
             {/* Static Footer (Strength & Generate) */}
             <div className="p-4 sm:p-6 border-t border-slate-700/50 bg-slate-900/80 flex-shrink-0 rounded-b-2xl">
               <div className="mb-4 sm:mb-6">
-                <StrengthIndicator strength={strength} />
+                <StrengthIndicator strength={strength} entropy={entropy} />
               </div>
               
               {
