@@ -5,6 +5,7 @@ import { usePasswordGenerator } from './hooks/usePasswordGenerator';
 import StrengthIndicator from './components/StrengthIndicator';
 import PasswordHistory from './components/PasswordHistory';
 import Tooltip from './components/Tooltip';
+import Toast from './components/Toast';
 import { CheckIcon, CopyIcon, ArrowRightIcon, RefreshIcon, SparklesIcon, SpinnerIcon, ExportIcon, AuditIcon, EyeIcon, EyeOffIcon, ShieldIcon, WarningIcon, LightbulbIcon, BulkIcon, KeyIcon, GearIcon } from './components/Icons';
 import { SYMBOL_CHARS } from './constants';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -104,6 +105,8 @@ function App() {
     };
   });
 
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const { password, strength, generatePassword, generatePassphrase, setPassword, updateStrength } = usePasswordGenerator();
   const [history, setHistory] = useState<HistoryItem[]>(() => {
@@ -543,8 +546,13 @@ function App() {
 
     try {
       await navigator.clipboard.writeText(textToCopy);
+      setToastMessage('✓ Copied!');
+      setShowToast(true);
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+      setTimeout(() => {
+        setShowToast(false);
+        setIsCopied(false);
+      }, 2000);
     } catch (err) {
       console.warn('Could not copy text with clipboard API:', err);
       // Fallback for non-focused documents or older browsers
@@ -563,8 +571,13 @@ function App() {
       try {
         const successful = document.execCommand('copy');
         if (successful) {
+            setToastMessage('✓ Copied!');
+            setShowToast(true);
             setIsCopied(true);
-            setTimeout(() => setIsCopied(false), 2000);
+            setTimeout(() => {
+                setShowToast(false);
+                setIsCopied(false);
+            }, 2000);
         } else {
             console.error('Fallback copy command failed');
         }
@@ -996,8 +1009,8 @@ function App() {
                     </button>
                 </Tooltip>
                 <Tooltip text={isCopied ? 'Copied!' : 'Copy to clipboard (Ctrl+C)'} align="right">
-                  <button onClick={() => handleCopyToClipboard(password)} aria-label="Copy password" disabled={!password} className="transition-transform active:scale-90">
-                      {isCopied ? <CheckIcon className="text-emerald-400 w-7 h-7" /> : <CopyIcon className="text-emerald-400 hover:text-white transition-colors w-7 h-7" />}
+                  <button onClick={() => handleCopyToClipboard(password)} aria-label="Copy password" disabled={!password} className="transition-transform active:scale-90 flex items-center justify-center">
+                      {isCopied ? <CheckIcon className="text-emerald-400 w-7 h-7 scale-125 transition-all duration-200" /> : <CopyIcon className="text-emerald-400 hover:text-white transition-colors w-7 h-7" />}
                   </button>
                 </Tooltip>
               </div>
@@ -1362,6 +1375,7 @@ function App() {
             </div>
         </div>
       </div>
+      <Toast message={toastMessage} isVisible={showToast} />
     </main>
   );
 }
