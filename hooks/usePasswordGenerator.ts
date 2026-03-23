@@ -102,15 +102,15 @@ export const usePasswordGenerator = () => {
       }
     }
 
-    // Recalibrated thresholds to better reflect passphrase strength
-    if (entropy >= 60) {
-      setStrength(StrengthLevel.STRONG); // Excellent
-    } else if (entropy >= 45) {
-      setStrength(StrengthLevel.MEDIUM); // Good
-    } else if (entropy >= 30) {
-      setStrength(StrengthLevel.WEAK); // Fair
+    // Stricter thresholds for modern hardware
+    if (entropy >= 80) {
+      setStrength(StrengthLevel.STRONG); // Excellent (approx > centuries)
+    } else if (entropy >= 60) {
+      setStrength(StrengthLevel.MEDIUM); // Good (approx > months/years)
+    } else if (entropy >= 40) {
+      setStrength(StrengthLevel.WEAK); // Fair (approx > hours/days)
     } else if (entropy > 0) {
-      setStrength(StrengthLevel.VERY_WEAK); // Poor
+      setStrength(StrengthLevel.VERY_WEAK); // Poor (approx < minutes)
     } else {
       setStrength(StrengthLevel.EMPTY);
     }

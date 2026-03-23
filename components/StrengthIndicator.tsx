@@ -22,19 +22,19 @@ const StrengthIndicator: React.FC<StrengthIndicatorProps> = ({ strength, entropy
     const seconds = Math.pow(2, bits) / hashesPerSecond;
 
     if (seconds < 1) return '< 1 second';
-    if (seconds < 60) return `${Math.floor(seconds)} seconds`;
+    if (seconds < 60) return `${Math.floor(seconds)} second${Math.floor(seconds) === 1 ? '' : 's'}`;
     
     const minutes = seconds / 60;
-    if (minutes < 60) return `${Math.floor(minutes)} minutes`;
+    if (minutes < 60) return `${Math.floor(minutes)} minute${Math.floor(minutes) === 1 ? '' : 's'}`;
     
     const hours = minutes / 60;
-    if (hours < 24) return `${Math.floor(hours)} hours`;
+    if (hours < 24) return `${Math.floor(hours)} hour${Math.floor(hours) === 1 ? '' : 's'}`;
     
     const days = hours / 24;
-    if (days < 365) return `${Math.floor(days)} days`;
+    if (days < 365) return `${Math.floor(days)} day${Math.floor(days) === 1 ? '' : 's'}`;
     
     const years = days / 365;
-    if (years < 100) return `${Math.floor(years)} years`;
+    if (years < 100) return `${Math.floor(years)} year${Math.floor(years) === 1 ? '' : 's'}`;
     if (years < 1000) return 'centuries';
     return 'millennia or more';
   };
