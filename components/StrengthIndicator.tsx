@@ -56,9 +56,9 @@ const StrengthIndicator: React.FC<StrengthIndicatorProps> = ({ strength, entropy
         ></div>
       </div>
       {isNotEmpty && (
-        <div className="mt-3 flex justify-between items-center text-xs text-slate-400 border-t border-slate-700/50 pt-2">
-           <span>Entropy: {Math.round(entropy)} bits</span>
-           <span>Crack time: {crackTime}</span>
+        <div className="mt-3 flex flex-wrap justify-between items-center text-xs text-slate-400 border-t border-slate-700/50 pt-2 gap-x-4 gap-y-1">
+           <span className="flex-1 min-w-0 break-words">Entropy: {Math.round(entropy)} bits</span>
+           <span className="flex-1 min-w-0 break-words text-left sm:text-right">Crack time: {crackTime}</span>
         </div>
       )}
     </div>
