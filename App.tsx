@@ -271,8 +271,7 @@ function App() {
     if (generatorType === 'password' || generatorType === 'passphrase') {
       handleGenerate(true, true); // skip animation, skip history
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [passwordOptions, passphraseOptions, generatorType]);
+  }, [passwordOptions, passphraseOptions, generatorType, handleGenerate]);
   
   const handleAiGenerate = async () => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
@@ -766,14 +765,9 @@ function App() {
     }
   }, [passwordOptions.length, totalMinimums, handlePasswordOptionsChange]);
 
-  useEffect(() => {
-    updateStrength('password', passwordOptions);
-  }, [passwordOptions, updateStrength]);
-
   const handlePassphraseOptionsChange = (option: Partial<PassphraseOptions>) => {
     const newOptions = { ...passphraseOptions, ...option };
     setPassphraseOptions(newOptions);
-    updateStrength('passphrase', newOptions);
   };
   
   const handleAuditPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -883,7 +877,7 @@ function App() {
               max="32"
               value={passwordOptions.length}
               onChange={(e) => handlePasswordOptionsChange({ length: Number(e.target.value) })}
-              className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb"
+              className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb touch-pan-y"
             />
         </Tooltip>
       </div>
@@ -943,7 +937,7 @@ function App() {
                   max="8"
                   value={passphraseOptions.wordCount}
                   onChange={(e) => handlePassphraseOptionsChange({ wordCount: Number(e.target.value) })}
-                  className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb"
+                  className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb touch-pan-y"
                 />
             </Tooltip>
           </div>
@@ -1136,13 +1130,13 @@ function App() {
                 
                 {generatorType === 'password' && (
                   <div className="animate-fade-in">
-                    <PasswordOptionsPanel />
+                    {PasswordOptionsPanel()}
                   </div>
                 )}
                 
                 {generatorType === 'passphrase' && (
                   <div className="animate-fade-in">
-                    <PassphraseOptionsPanel />
+                    {PassphraseOptionsPanel()}
                   </div>
                 )}
 
@@ -1242,12 +1236,12 @@ function App() {
                                 max="50"
                                 value={bulkCount}
                                 onChange={(e) => setBulkCount(Number(e.target.value))}
-                                className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb"
+                                className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb touch-pan-y"
                               />
                           </Tooltip>
                         </div>
 
-                        {bulkGenType === 'password' ? <PasswordOptionsPanel/> : <PassphraseOptionsPanel/>}
+                        {bulkGenType === 'password' ? PasswordOptionsPanel() : PassphraseOptionsPanel()}
 
                         {bulkResults.length > 0 && (
                             <div className="mt-8 pt-6 border-t border-slate-700/50 animate-fade-in">
