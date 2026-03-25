@@ -5,8 +5,7 @@ import { usePasswordGenerator } from './hooks/usePasswordGenerator';
 import StrengthIndicator from './components/StrengthIndicator';
 import PasswordHistory from './components/PasswordHistory';
 import Tooltip from './components/Tooltip';
-import Toast from './components/Toast';
-import { CheckIcon, CopyIcon, ArrowRightIcon, RefreshIcon, SparklesIcon, SpinnerIcon, ExportIcon, AuditIcon, EyeIcon, EyeOffIcon, ShieldIcon, WarningIcon, LightbulbIcon, BulkIcon, KeyIcon, GearIcon, ShareIcon } from './components/Icons';
+import { CheckIcon, CopyIcon, ArrowRightIcon, RefreshIcon, SparklesIcon, SpinnerIcon, ExportIcon, AuditIcon, EyeIcon, EyeOffIcon, ShieldIcon, WarningIcon, LightbulbIcon, BulkIcon, KeyIcon } from './components/Icons';
 import { SYMBOL_CHARS } from './constants';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -105,21 +104,8 @@ function App() {
     };
   });
 
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [isCopied, setIsCopied] = useState(false);
-  const { password, strength, entropy, generatePassword, generatePassphrase, setPassword, updateStrength } = usePasswordGenerator();
-  const [isShuffling, setIsShuffling] = useState(false);
-  const [shuffledText, setShuffledText] = useState('');
-  const shuffleIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (shuffleIntervalRef.current) {
-        clearInterval(shuffleIntervalRef.current);
-      }
-    };
-  }, []);
+  const { password, strength, generatePassword, generatePassphrase, setPassword, updateStrength } = usePasswordGenerator();
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const savedHistory = localStorage.getItem('passwordHistory');
@@ -138,28 +124,6 @@ function App() {
       return [];
     }
   });
-
-  // API Key State
-  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem('geminiApiKey') || '');
-  const [apiKeyInput, setApiKeyInput] = useState('');
-  const [isApiKeyVisible, setIsApiKeyVisible] = useState(false);
-  const [showApiKeyPanel, setShowApiKeyPanel] = useState(false);
-
-  const handleSaveApiKey = () => {
-    const trimmed = apiKeyInput.trim();
-    if (trimmed) {
-      localStorage.setItem('geminiApiKey', trimmed);
-      setApiKey(trimmed);
-      setApiKeyInput('');
-      setShowApiKeyPanel(false);
-    }
-  };
-
-  const handleClearApiKey = () => {
-    localStorage.removeItem('geminiApiKey');
-    setApiKey('');
-    setApiKeyInput('');
-  };
 
   // AI Generation State
   const [aiPrompt, setAiPrompt] = useState('');
@@ -197,7 +161,7 @@ function App() {
     localStorage.setItem('generatorType', generatorType);
   }, [generatorType]);
   
-  const addNewPasswordToHistory = useCallback((newPassword: string, type: 'password' | 'passphrase', options: PasswordOptions | PassphraseOptions) => {
+  const addNewPasswordToHistory = (newPassword: string, type: 'password' | 'passphrase', options: PasswordOptions | PassphraseOptions) => {
     if (!newPassword) return;
     const newHistoryItem: HistoryItem = { 
         password: newPassword, 
@@ -206,7 +170,7 @@ function App() {
         options,
     };
     setHistory(prev => [newHistoryItem, ...prev.filter(p => p.password !== newPassword)].slice(0, 10));
-  }, []);
+  };
   
   const handleGenerate = useCallback(() => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
@@ -223,50 +187,14 @@ function App() {
     }
 
     if (newPassword) {
-      if (shuffleIntervalRef.current) {
-        clearInterval(shuffleIntervalRef.current);
-      }
-      
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      if (prefersReducedMotion) {
-        setIsShuffling(false);
-        setPassword(newPassword);
-        updateStrength(generatorType, currentOptions, newPassword);
-        addNewPasswordToHistory(newPassword, generatorType, currentOptions);
-      } else {
-        setIsShuffling(true);
-        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        const maxIterations = 10;
-        let iterations = 0;
-        
-        shuffleIntervalRef.current = setInterval(() => {
-          let text = '';
-          for (let i = 0; i < newPassword.length; i++) {
-            text += charset[Math.floor(Math.random() * charset.length)];
-          }
-          setShuffledText(text);
-          iterations++;
-          
-          if (iterations >= maxIterations) {
-            if (shuffleIntervalRef.current) clearInterval(shuffleIntervalRef.current);
-            setIsShuffling(false);
-            setPassword(newPassword);
-            updateStrength(generatorType, currentOptions, newPassword);
-            addNewPasswordToHistory(newPassword, generatorType, currentOptions);
-          }
-        }, 30);
-      }
+      setPassword(newPassword);
+      updateStrength(generatorType, currentOptions, newPassword);
+      addNewPasswordToHistory(newPassword, generatorType, currentOptions);
     }
-  }, [generatorType, passwordOptions, passphraseOptions, generatePassword, generatePassphrase, setPassword, updateStrength, addNewPasswordToHistory]);
+  }, [generatorType, passwordOptions, passphraseOptions, generatePassword, generatePassphrase, setPassword, updateStrength]);
   
   const handleAiGenerate = async () => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
-
-    if (!apiKey) {
-      setAiError('Please set your Gemini API key in the settings (⚙) above.');
-      return;
-    }
 
     if (generatorType === 'passphrase' && !aiPrompt.trim()) {
       setAiError('Please enter a theme for the AI.');
@@ -276,7 +204,7 @@ function App() {
     setAiError('');
   
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       
       let prompt = '';
       let responseSchema: any;
@@ -369,17 +297,13 @@ function App() {
         setAuditError('Please enter a password to audit.');
         return;
     }
-    if (!apiKey) {
-        setAuditError('Please set your Gemini API key in the settings (⚙) above.');
-        return;
-    }
     setIsAuditing(true);
     setAuditError('');
     setSuggestionError('');
     setAuditResult(null);
 
     try {
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
         const prompt = `
             You are a cybersecurity expert specializing in password entropy and cracking techniques.
@@ -447,16 +371,12 @@ function App() {
   
   const handleGenerateWithSuggestions = async () => {
     if (!auditResult || !auditPassword) return;
-    if (!apiKey) {
-        setSuggestionError('Please set your Gemini API key in the settings (⚙) above.');
-        return;
-    }
 
     setIsGeneratingSuggestion(true);
     setSuggestionError('');
 
     try {
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
         
         const characterTypes = [];
         if (/[A-Z]/.test(auditPassword)) characterTypes.push("uppercase letters (A-Z)");
@@ -588,13 +508,8 @@ function App() {
 
     try {
       await navigator.clipboard.writeText(textToCopy);
-      setToastMessage('✓ Copied!');
-      setShowToast(true);
       setIsCopied(true);
-      setTimeout(() => {
-        setShowToast(false);
-        setIsCopied(false);
-      }, 2000);
+      setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.warn('Could not copy text with clipboard API:', err);
       // Fallback for non-focused documents or older browsers
@@ -613,13 +528,8 @@ function App() {
       try {
         const successful = document.execCommand('copy');
         if (successful) {
-            setToastMessage('✓ Copied!');
-            setShowToast(true);
             setIsCopied(true);
-            setTimeout(() => {
-                setShowToast(false);
-                setIsCopied(false);
-            }, 2000);
+            setTimeout(() => setIsCopied(false), 2000);
         } else {
             console.error('Fallback copy command failed');
         }
@@ -630,21 +540,6 @@ function App() {
       document.body.removeChild(textArea);
     }
   }, []);
-
-  const handleShare = useCallback(async (textToShare: string) => {
-    if (!textToShare) return;
-    if (navigator.share) {
-      try {
-         await navigator.share({
-           text: textToShare,
-         });
-      } catch (err) {
-         console.warn('Share failed or cancelled:', err);
-      }
-    } else {
-      handleCopyToClipboard(textToShare);
-    }
-  }, [handleCopyToClipboard]);
   
   // Keyboard Shortcuts Handler
   useEffect(() => {
@@ -984,80 +879,17 @@ function App() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="w-full max-w-lg mx-auto flex flex-col h-full">
-        <div className="flex items-center justify-between mb-3 sm:mb-6 flex-shrink-0">
-          <h1 className="text-slate-300 text-lg sm:text-2xl font-bold tracking-widest flex items-center gap-2 sm:gap-4">
-            <KeyIcon />
-            PASSWORD TOOLKIT
-          </h1>
-          <Tooltip text={apiKey ? 'API Key is set (click to change)' : 'Set Gemini API Key'} align="right">
-            <button
-              onClick={() => setShowApiKeyPanel(prev => !prev)}
-              aria-label="Settings"
-              className={`transition-transform duration-300 ${showApiKeyPanel ? 'rotate-45' : ''}`}
-            >
-              <GearIcon className={`w-5 h-5 transition-colors ${apiKey ? 'text-emerald-400' : 'text-slate-500 hover:text-white'}`} />
-            </button>
-          </Tooltip>
-        </div>
-
-        {/* API Key Panel */}
-        {showApiKeyPanel && (
-          <div className="mb-3 sm:mb-4 bg-slate-900/70 border border-slate-700/60 rounded-xl p-4 animate-fade-in flex-shrink-0">
-            <h2 className="text-slate-300 font-bold text-sm mb-3 flex items-center gap-2">
-              <SparklesIcon className="w-4 h-4 text-emerald-400" />
-              Gemini API Key
-            </h2>
-            {apiKey ? (
-              <div className="flex items-center gap-3">
-                <p className="text-emerald-400 text-sm flex-1">✓ API key is saved and active</p>
-                <button
-                  onClick={handleClearApiKey}
-                  className="text-red-400 hover:text-red-300 text-xs border border-red-400/30 hover:border-red-400 rounded-md px-3 py-1.5 transition-colors"
-                >
-                  Clear Key
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <p className="text-slate-400 text-xs mb-1">Enter your <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline hover:text-emerald-300">Google AI Studio API key</a> to enable AI features.</p>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type={isApiKeyVisible ? 'text' : 'password'}
-                      id="api-key-input"
-                      value={apiKeyInput}
-                      onChange={(e) => setApiKeyInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSaveApiKey()}
-                      placeholder="AIza..."
-                      className="w-full bg-slate-800 border-2 border-slate-600 rounded-lg pl-4 pr-10 py-2 text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-                    />
-                    <button
-                      onClick={() => setIsApiKeyVisible(prev => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                      aria-label={isApiKeyVisible ? 'Hide API key' : 'Show API key'}
-                    >
-                      {isApiKeyVisible ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  <button
-                    onClick={handleSaveApiKey}
-                    disabled={!apiKeyInput.trim()}
-                    className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-900 font-bold px-4 py-2 rounded-lg text-sm transition-colors"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+      <div className="w-full max-w-lg mx-auto">
+        <h1 className="text-slate-300 text-center text-lg sm:text-2xl font-bold mb-3 sm:mb-6 tracking-widest flex items-center justify-center gap-2 sm:gap-4">
+          <KeyIcon />
+          PASSWORD TOOLKIT
+        </h1>
         
-        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden">
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50">
             {/* Password Display */}
-            <div className="p-4 sm:p-6 flex justify-between items-center flex-shrink-0">
-              <span className={`text-slate-100 text-2xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password || isShuffling ? 'opacity-100 password-glow' : 'opacity-50'} ${isShuffling ? 'font-mono text-emerald-300' : ''}`}>
-                {isShuffling ? shuffledText : (password || (generatorType === 'bulk' ? 'Bulk Mode' : 'P4$5W0rD!'))}
+            <div className="p-4 sm:p-6 flex justify-between items-center">
+              <span className={`text-slate-100 text-2xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password ? 'opacity-100 password-glow' : 'opacity-50'}`}>
+                {password || (generatorType === 'bulk' ? 'Bulk Mode' : 'P4$5W0rD!')}
               </span>
               <div className="flex items-center gap-3">
                 <Tooltip text={`Generate new ${generatorType} (Ctrl+G)`} align="right">
@@ -1066,23 +898,15 @@ function App() {
                     </button>
                 </Tooltip>
                 <Tooltip text={isCopied ? 'Copied!' : 'Copy to clipboard (Ctrl+C)'} align="right">
-                  <button onClick={() => handleCopyToClipboard(password)} aria-label="Copy password" disabled={!password} className="transition-transform active:scale-90 flex items-center justify-center">
-                      {isCopied ? <CheckIcon className="text-emerald-400 w-7 h-7 scale-125 transition-all duration-200" /> : <CopyIcon className="text-emerald-400 hover:text-white transition-colors w-7 h-7" />}
+                  <button onClick={() => handleCopyToClipboard(password)} aria-label="Copy password" disabled={!password} className="transition-transform active:scale-90">
+                      {isCopied ? <CheckIcon className="text-emerald-400 w-7 h-7" /> : <CopyIcon className="text-emerald-400 hover:text-white transition-colors w-7 h-7" />}
                   </button>
                 </Tooltip>
-                {!!navigator.share && (
-                  <Tooltip text="Share password" align="right">
-                    <button onClick={() => handleShare(password)} aria-label="Share password" disabled={!password} className="transition-transform active:scale-90 flex items-center justify-center">
-                        <ShareIcon className="text-emerald-400 hover:text-white transition-colors w-6 h-6" />
-                    </button>
-                  </Tooltip>
-                )}
               </div>
             </div>
 
             {/* Customization Panel */}
-            <div className="flex-1">
-              <div className="p-4 sm:p-6 border-t border-slate-700/50">
+            <div className="p-4 sm:p-6 border-t border-slate-700/50">
                 {/* Tabs */}
                 <div className="flex border-b border-slate-700 mb-4 sm:mb-6 bg-slate-800/50 rounded-t-lg p-1 text-sm sm:text-base">
                     <button 
@@ -1360,86 +1184,83 @@ function App() {
                     @keyframes fade-in { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } } 
                     .animate-fade-in { animation: fade-in 0.4s ease-in-out; }
                 `}</style>
-              </div>
-
-              {history.length > 0 && (
-                <div className="border-t border-slate-700/50">
-                  <PasswordHistory 
-                    history={history} 
-                    onSelect={handleSelectFromHistory}
-                    onClear={handleClearHistory}
-                    onCopy={handleCopyToClipboard}
-                    onDeleteItem={handleDeleteItemFromHistory}
-                    onExport={handleExportHistory}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Static Footer (Strength & Generate) */}
-            <div className="p-4 sm:p-6 border-t border-slate-700/50 bg-slate-900/80 flex-shrink-0 rounded-b-2xl">
-              <div className="mb-4 sm:mb-6">
-                <StrengthIndicator strength={strength} entropy={entropy} />
-              </div>
               
-              {
+              <div className="mt-4 sm:mt-8">
+                <div className="mb-4 sm:mb-6">
+                  <StrengthIndicator strength={strength} />
+                </div>
+                
                 {
-                  'audit': (
-                    <Tooltip text="Get AI analysis">
-                         <button 
-                            onClick={handleAuditPassword}
-                            disabled={isAuditing || !auditPassword}
-                            className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
-                                      border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2
-                                      disabled:bg-slate-600 disabled:border-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  {
+                    'audit': (
+                      <Tooltip text="Get AI analysis">
+                           <button 
+                              onClick={handleAuditPassword}
+                              disabled={isAuditing || !auditPassword}
+                              className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
+                                        border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2
+                                        disabled:bg-slate-600 disabled:border-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed"
+                          >
+                              {isAuditing ? <SpinnerIcon /> : <AuditIcon />}
+                              Audit Password
+                          </button>
+                      </Tooltip>
+                    ),
+                    'bulk': (
+                      <Tooltip text={`Generate ${bulkCount} ${bulkGenType}(s)`}>
+                        <button 
+                          onClick={handleBulkGenerate}
+                          className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
+                                    border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
                         >
-                            {isAuditing ? <SpinnerIcon /> : <AuditIcon />}
-                            Audit Password
+                          <BulkIcon />
+                          Generate Bulk
                         </button>
-                    </Tooltip>
-                  ),
-                  'bulk': (
-                    <Tooltip text={`Generate ${bulkCount} ${bulkGenType}(s)`}>
-                      <button 
-                        onClick={handleBulkGenerate}
-                        className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
-                                  border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
-                      >
-                        <BulkIcon />
-                        Generate Bulk
-                      </button>
-                    </Tooltip>
-                  ),
-                  'password': (
-                    <Tooltip text={'Create a new random password (Ctrl+G)'}>
-                      <button 
-                        onClick={handleGenerate}
-                        className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
-                                  border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
-                      >
-                        Generate
-                        <ArrowRightIcon/>
-                      </button>
-                    </Tooltip>
-                  ),
-                  'passphrase': (
-                    <Tooltip text={'Create a new random passphrase (Ctrl+G)'}>
-                      <button 
-                        onClick={handleGenerate}
-                        className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
-                                  border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
-                      >
-                        Generate
-                        <ArrowRightIcon/>
-                      </button>
-                    </Tooltip>
-                  ),
-                }[generatorType]
-              }
+                      </Tooltip>
+                    ),
+                    'password': (
+                      <Tooltip text={'Create a new random password (Ctrl+G)'}>
+                        <button 
+                          onClick={handleGenerate}
+                          className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
+                                    border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
+                        >
+                          Generate
+                          <ArrowRightIcon/>
+                        </button>
+                      </Tooltip>
+                    ),
+                    'passphrase': (
+                      <Tooltip text={'Create a new random passphrase (Ctrl+G)'}>
+                        <button 
+                          onClick={handleGenerate}
+                          className="w-full bg-emerald-500 p-4 text-slate-900 font-bold text-lg uppercase flex items-center justify-center gap-4
+                                    border-b-4 border-emerald-700 hover:bg-emerald-400 hover:border-emerald-600 transition-all duration-200 rounded-lg active:scale-[0.98] active:border-b-2"
+                        >
+                          Generate
+                          <ArrowRightIcon/>
+                        </button>
+                      </Tooltip>
+                    ),
+                  }[generatorType]
+                }
+              </div>
             </div>
+
+            {history.length > 0 && (
+              <div className="border-t border-slate-700/50">
+                <PasswordHistory 
+                  history={history} 
+                  onSelect={handleSelectFromHistory}
+                  onClear={handleClearHistory}
+                  onCopy={handleCopyToClipboard}
+                  onDeleteItem={handleDeleteItemFromHistory}
+                  onExport={handleExportHistory}
+                />
+              </div>
+            )}
         </div>
       </div>
-      <Toast message={toastMessage} isVisible={showToast} />
     </main>
   );
 }
