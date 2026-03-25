@@ -271,7 +271,8 @@ function App() {
     if (generatorType === 'password' || generatorType === 'passphrase') {
       handleGenerate(true, true); // skip animation, skip history
     }
-  }, [passwordOptions, passphraseOptions, generatorType, handleGenerate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [passwordOptions, passphraseOptions, generatorType]);
   
   const handleAiGenerate = async () => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
