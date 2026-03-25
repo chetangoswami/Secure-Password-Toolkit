@@ -12,7 +12,10 @@ export const usePasswordGenerator = () => {
     const passwordOptions = options as PasswordOptions;
     const passphraseOptions = options as PassphraseOptions;
     
-    const currentVal = value ?? password;
+    // Use the explicit value passed in, or default to an empty string.
+    // By removing the dependency on `password` state, we prevent infinite loops
+    // in App.tsx when updating strength and auto-generating passwords.
+    const currentVal = value || '';
     if (currentVal === '') {
       setStrength(StrengthLevel.EMPTY);
       setEntropy(0);
@@ -115,7 +118,7 @@ export const usePasswordGenerator = () => {
       setStrength(StrengthLevel.EMPTY);
     }
     setEntropy(Math.max(0, entropy));
-  }, [password]);
+  }, []);
 
   const generatePassword = useCallback((options: PasswordOptions): string => {
     const { 
