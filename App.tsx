@@ -208,7 +208,7 @@ function App() {
     setHistory(prev => [newHistoryItem, ...prev.filter(p => p.password !== newPassword)].slice(0, 10));
   }, []);
   
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback((skipAnimation: boolean = false, skipHistory: boolean = false) => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
     
     let newPassword = '';
@@ -229,11 +229,13 @@ function App() {
       
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      if (prefersReducedMotion) {
+      if (prefersReducedMotion || skipAnimation) {
         setIsShuffling(false);
         setPassword(newPassword);
         updateStrength(generatorType, currentOptions, newPassword);
-        addNewPasswordToHistory(newPassword, generatorType, currentOptions);
+        if (!skipHistory) {
+          addNewPasswordToHistory(newPassword, generatorType, currentOptions);
+        }
       } else {
         setIsShuffling(true);
         const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
@@ -253,12 +255,23 @@ function App() {
             setIsShuffling(false);
             setPassword(newPassword);
             updateStrength(generatorType, currentOptions, newPassword);
-            addNewPasswordToHistory(newPassword, generatorType, currentOptions);
+            if (!skipHistory) {
+              addNewPasswordToHistory(newPassword, generatorType, currentOptions);
+            }
           }
         }, 30);
       }
     }
   }, [generatorType, passwordOptions, passphraseOptions, generatePassword, generatePassphrase, setPassword, updateStrength, addNewPasswordToHistory]);
+
+  // Auto-generate for instant feedback when options change
+  useEffect(() => {
+    // Only auto-generate if we have already generated at least once (password is not empty)
+    // Actually, generating on first load is also fine.
+    if (generatorType === 'password' || generatorType === 'passphrase') {
+      handleGenerate(true, true); // skip animation, skip history
+    }
+  }, [passwordOptions, passphraseOptions, generatorType, handleGenerate]);
   
   const handleAiGenerate = async () => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
@@ -1053,31 +1066,40 @@ function App() {
           </div>
         )}
         
-        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden">
-            {/* Password Display */}
-            <div className="p-4 sm:p-6 flex justify-between items-center flex-shrink-0">
-              <span className={`text-slate-100 text-2xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password || isShuffling ? 'opacity-100 password-glow' : 'opacity-50'} ${isShuffling ? 'font-mono text-emerald-300' : ''}`}>
-                {isShuffling ? shuffledText : (password || (generatorType === 'bulk' ? 'Bulk Mode' : 'P4$5W0rD!'))}
-              </span>
-              <div className="flex items-center gap-3">
-                <Tooltip text={`Generate new ${generatorType} (Ctrl+G)`} align="right">
-                    <button onClick={handleGenerate} aria-label="Regenerate password" disabled={generatorType === 'audit' || generatorType === 'bulk'} className="transition-transform active:scale-90">
-                        <RefreshIcon className={`text-emerald-400 hover:text-white transition-colors w-7 h-7 hover:rotate-180 duration-500 ${(generatorType === 'audit' || generatorType === 'bulk') ? 'opacity-30 cursor-not-allowed' : ''}`} />
-                    </button>
-                </Tooltip>
-                <Tooltip text={isCopied ? 'Copied!' : 'Copy to clipboard (Ctrl+C)'} align="right">
-                  <button onClick={() => handleCopyToClipboard(password)} aria-label="Copy password" disabled={!password} className="transition-transform active:scale-90 flex items-center justify-center">
-                      {isCopied ? <CheckIcon className="text-emerald-400 w-7 h-7 scale-125 transition-all duration-200" /> : <CopyIcon className="text-emerald-400 hover:text-white transition-colors w-7 h-7" />}
-                  </button>
-                </Tooltip>
-                {!!navigator.share && (
-                  <Tooltip text="Share password" align="right">
-                    <button onClick={() => handleShare(password)} aria-label="Share password" disabled={!password} className="transition-transform active:scale-90 flex items-center justify-center">
-                        <ShareIcon className="text-emerald-400 hover:text-white transition-colors w-6 h-6" />
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col">
+            {/* Password Display (Sticky Header for Instant Feedback) */}
+            <div className="p-4 sm:p-6 flex flex-col flex-shrink-0 sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50 rounded-t-2xl shadow-md">
+              <div className="flex justify-between items-center">
+                <span className={`text-slate-100 text-2xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password || isShuffling ? 'opacity-100 password-glow' : 'opacity-50'} ${isShuffling ? 'font-mono text-emerald-300' : ''}`}>
+                  {isShuffling ? shuffledText : (password || (generatorType === 'bulk' ? 'Bulk Mode' : 'P4$5W0rD!'))}
+                </span>
+                <div className="flex items-center gap-3">
+                  <Tooltip text={`Generate new ${generatorType} (Ctrl+G)`} align="right">
+                      <button onClick={() => handleGenerate(false, false)} aria-label="Regenerate password" disabled={generatorType === 'audit' || generatorType === 'bulk'} className="transition-transform active:scale-90">
+                          <RefreshIcon className={`text-emerald-400 hover:text-white transition-colors w-7 h-7 hover:rotate-180 duration-500 ${(generatorType === 'audit' || generatorType === 'bulk') ? 'opacity-30 cursor-not-allowed' : ''}`} />
+                      </button>
+                  </Tooltip>
+                  <Tooltip text={isCopied ? 'Copied!' : 'Copy to clipboard (Ctrl+C)'} align="right">
+                    <button onClick={() => handleCopyToClipboard(password)} aria-label="Copy password" disabled={!password} className="transition-transform active:scale-90 flex items-center justify-center">
+                        {isCopied ? <CheckIcon className="text-emerald-400 w-7 h-7 scale-125 transition-all duration-200" /> : <CopyIcon className="text-emerald-400 hover:text-white transition-colors w-7 h-7" />}
                     </button>
                   </Tooltip>
-                )}
+                  {!!navigator.share && (
+                    <Tooltip text="Share password" align="right">
+                      <button onClick={() => handleShare(password)} aria-label="Share password" disabled={!password} className="transition-transform active:scale-90 flex items-center justify-center">
+                          <ShareIcon className="text-emerald-400 hover:text-white transition-colors w-6 h-6" />
+                      </button>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
+              
+              {/* Strength Indicator directly below password for Instant Feedback */}
+              {(generatorType === 'password' || generatorType === 'passphrase') && (
+                <div className="mt-4 pt-4 border-t border-slate-700/50">
+                  <StrengthIndicator strength={strength} entropy={entropy} />
+                </div>
+              )}
             </div>
 
             {/* Customization Panel */}
@@ -1376,11 +1398,8 @@ function App() {
               )}
             </div>
 
-            {/* Static Footer (Strength & Generate) */}
+            {/* Static Footer (Generate/Audit Buttons) */}
             <div className="p-4 sm:p-6 border-t border-slate-700/50 bg-slate-900/80 flex-shrink-0 rounded-b-2xl">
-              <div className="mb-4 sm:mb-6">
-                <StrengthIndicator strength={strength} entropy={entropy} />
-              </div>
               
               {
                 {
@@ -1443,7 +1462,7 @@ function App() {
       {/* Floating Action Button (FAB) for Generating Passwords/Passphrases */}
       {generatorType !== 'audit' && generatorType !== 'bulk' && (
         <button
-          onClick={handleGenerate}
+          onClick={() => handleGenerate(false, false)}
           className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-full p-4 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-all duration-300 z-50 group transform hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer"
           aria-label="Generate Password"
         >
