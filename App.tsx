@@ -58,6 +58,144 @@ const RuleControl: React.FC<RuleControlProps> = ({ id, label, checked, onChecked
 );
 
 
+interface PasswordOptionsPanelProps {
+  passwordOptions: PasswordOptions;
+  handlePasswordOptionsChange: (updates: Partial<PasswordOptions>) => void;
+  totalMinimums: number;
+}
+
+const PasswordOptionsPanel: React.FC<PasswordOptionsPanelProps> = ({ passwordOptions, handlePasswordOptionsChange, totalMinimums }) => (
+  <>
+    <div className="mb-4 sm:mb-6">
+      <div className="flex justify-between items-center mb-2 sm:mb-4">
+        <label htmlFor="length" className="text-slate-200 text-sm sm:text-lg">Character Length</label>
+        <span className="text-emerald-400 text-2xl sm:text-3xl font-bold">{passwordOptions.length}</span>
+      </div>
+      <Tooltip text="Drag to change password length (6-32)">
+          <input
+            type="range"
+            id="length"
+            min={Math.max(6, totalMinimums)}
+            max="32"
+            value={passwordOptions.length}
+            onChange={(e) => handlePasswordOptionsChange({ length: Number(e.target.value) })}
+            className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb"
+          />
+      </Tooltip>
+    </div>
+    <div className="space-y-2">
+       <RuleControl
+          id="uppercase"
+          label="Include Uppercase Letters (A-Z)"
+          checked={passwordOptions.includeUppercase}
+          onCheckedChange={(e) => handlePasswordOptionsChange({ includeUppercase: e.target.checked })}
+          count={passwordOptions.minUppercase}
+          onCountChange={(e) => handlePasswordOptionsChange({ minUppercase: Number(e.target.value) })}
+          max={passwordOptions.length - (totalMinimums - passwordOptions.minUppercase)}
+       />
+       <RuleControl
+          id="lowercase"
+          label="Include Lowercase Letters (a-z)"
+          checked={passwordOptions.includeLowercase}
+          onCheckedChange={(e) => handlePasswordOptionsChange({ includeLowercase: e.target.checked })}
+          count={passwordOptions.minLowercase}
+          onCountChange={(e) => handlePasswordOptionsChange({ minLowercase: Number(e.target.value) })}
+          max={passwordOptions.length - (totalMinimums - passwordOptions.minLowercase)}
+       />
+        <RuleControl
+          id="numbers"
+          label="Include Numbers (0-9)"
+          checked={passwordOptions.includeNumbers}
+          onCheckedChange={(e) => handlePasswordOptionsChange({ includeNumbers: e.target.checked })}
+          count={passwordOptions.minNumbers}
+          onCountChange={(e) => handlePasswordOptionsChange({ minNumbers: Number(e.target.value) })}
+          max={passwordOptions.length - (totalMinimums - passwordOptions.minNumbers)}
+       />
+       <RuleControl
+          id="symbols"
+          label={`Include Symbols (${SYMBOL_CHARS.slice(0,10)}...)`}
+          checked={passwordOptions.includeSymbols}
+          onCheckedChange={(e) => handlePasswordOptionsChange({ includeSymbols: e.target.checked })}
+          count={passwordOptions.minSymbols}
+          onCountChange={(e) => handlePasswordOptionsChange({ minSymbols: Number(e.target.value) })}
+          max={passwordOptions.length - (totalMinimums - passwordOptions.minSymbols)}
+       />
+    </div>
+  </>
+);
+
+interface PassphraseOptionsPanelProps {
+  passphraseOptions: PassphraseOptions;
+  handlePassphraseOptionsChange: (updates: Partial<PassphraseOptions>) => void;
+}
+
+const PassphraseOptionsPanel: React.FC<PassphraseOptionsPanelProps> = ({ passphraseOptions, handlePassphraseOptionsChange }) => (
+    <>
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <label htmlFor="wordCount" className="text-slate-200 text-lg">Number of Words</label>
+            <span className="text-emerald-400 text-3xl font-bold">{passphraseOptions.wordCount}</span>
+          </div>
+          <Tooltip text="Drag to change word count (3-8)">
+              <input
+                type="range"
+                id="wordCount"
+                min="3"
+                max="8"
+                value={passphraseOptions.wordCount}
+                onChange={(e) => handlePassphraseOptionsChange({ wordCount: Number(e.target.value) })}
+                className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb"
+              />
+          </Tooltip>
+        </div>
+        <div className="mb-6">
+            <label htmlFor="separator" className="text-slate-200 text-lg mb-2 block">Separator Character</label>
+            <input
+                type="text"
+                id="separator"
+                value={passphraseOptions.separator}
+                onChange={(e) => handlePassphraseOptionsChange({ separator: e.target.value.slice(0, 1) })}
+                maxLength={1}
+                className="w-full bg-slate-900/50 border-2 border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+            />
+        </div>
+        <div className="space-y-2">
+           <label htmlFor="capitalize" className="flex items-center py-2 cursor-pointer select-none text-slate-200 text-base sm:text-lg group">
+              <div className="relative flex items-center justify-center w-6 h-6 mr-4 flex-shrink-0">
+                  <input
+                      id="capitalize"
+                      type="checkbox"
+                      checked={passphraseOptions.capitalize}
+                      onChange={(e) => handlePassphraseOptionsChange({ capitalize: e.target.checked })}
+                      className="absolute opacity-0 w-full h-full cursor-pointer peer"
+                  />
+                  <span className="w-6 h-6 bg-slate-900/50 rounded border-2 border-slate-500 peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-focus:ring-emerald-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all duration-200 group-hover:border-slate-400"></span>
+                  <span className="absolute text-white opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none transform scale-50 peer-checked:scale-100">
+                      <CheckIcon className="stroke-current w-4 h-4" />
+                  </span>
+              </div>
+              Capitalize First Letter of Each Word
+          </label>
+           <label htmlFor="includeNumber" className="flex items-center py-2 cursor-pointer select-none text-slate-200 text-base sm:text-lg group">
+              <div className="relative flex items-center justify-center w-6 h-6 mr-4 flex-shrink-0">
+                  <input
+                      id="includeNumber"
+                      type="checkbox"
+                      checked={passphraseOptions.includeNumber}
+                      onChange={(e) => handlePassphraseOptionsChange({ includeNumber: e.target.checked })}
+                      className="absolute opacity-0 w-full h-full cursor-pointer peer"
+                  />
+                  <span className="w-6 h-6 bg-slate-900/50 rounded border-2 border-slate-500 peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-focus:ring-emerald-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all duration-200 group-hover:border-slate-400"></span>
+                  <span className="absolute text-white opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none transform scale-50 peer-checked:scale-100">
+                      <CheckIcon className="stroke-current w-4 h-4" />
+                  </span>
+              </div>
+             Include a Random Number
+          </label>
+        </div>
+    </>
+);
+
 function App() {
   const [generatorType, setGeneratorType] = useState<'password' | 'passphrase' | 'audit' | 'bulk'>(() => {
     return (localStorage.getItem('generatorType') as 'password' | 'passphrase' | 'audit' | 'bulk') || 'password';
@@ -862,132 +1000,9 @@ function App() {
     "Very Strong": "text-green-500",
   }[auditResult?.rating || ''] || 'text-white';
   
-  const PasswordOptionsPanel = () => (
-    <>
-      <div className="mb-4 sm:mb-6">
-        <div className="flex justify-between items-center mb-2 sm:mb-4">
-          <label htmlFor="length" className="text-slate-200 text-sm sm:text-lg">Character Length</label>
-          <span className="text-emerald-400 text-2xl sm:text-3xl font-bold">{passwordOptions.length}</span>
-        </div>
-        <Tooltip text="Drag to change password length (6-32)">
-            <input
-              type="range"
-              id="length"
-              min={Math.max(6, totalMinimums)}
-              max="32"
-              value={passwordOptions.length}
-              onChange={(e) => handlePasswordOptionsChange({ length: Number(e.target.value) })}
-              className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb touch-pan-y"
-            />
-        </Tooltip>
-      </div>
-      <div className="space-y-2">
-         <RuleControl
-            id="uppercase"
-            label="Include Uppercase Letters (A-Z)"
-            checked={passwordOptions.includeUppercase}
-            onCheckedChange={(e) => handlePasswordOptionsChange({ includeUppercase: e.target.checked })}
-            count={passwordOptions.minUppercase}
-            onCountChange={(e) => handlePasswordOptionsChange({ minUppercase: Number(e.target.value) })}
-            max={passwordOptions.length - (totalMinimums - passwordOptions.minUppercase)}
-         />
-         <RuleControl
-            id="lowercase"
-            label="Include Lowercase Letters (a-z)"
-            checked={passwordOptions.includeLowercase}
-            onCheckedChange={(e) => handlePasswordOptionsChange({ includeLowercase: e.target.checked })}
-            count={passwordOptions.minLowercase}
-            onCountChange={(e) => handlePasswordOptionsChange({ minLowercase: Number(e.target.value) })}
-            max={passwordOptions.length - (totalMinimums - passwordOptions.minLowercase)}
-         />
-          <RuleControl
-            id="numbers"
-            label="Include Numbers (0-9)"
-            checked={passwordOptions.includeNumbers}
-            onCheckedChange={(e) => handlePasswordOptionsChange({ includeNumbers: e.target.checked })}
-            count={passwordOptions.minNumbers}
-            onCountChange={(e) => handlePasswordOptionsChange({ minNumbers: Number(e.target.value) })}
-            max={passwordOptions.length - (totalMinimums - passwordOptions.minNumbers)}
-         />
-         <RuleControl
-            id="symbols"
-            label={`Include Symbols (${SYMBOL_CHARS.slice(0,10)}...)`}
-            checked={passwordOptions.includeSymbols}
-            onCheckedChange={(e) => handlePasswordOptionsChange({ includeSymbols: e.target.checked })}
-            count={passwordOptions.minSymbols}
-            onCountChange={(e) => handlePasswordOptionsChange({ minSymbols: Number(e.target.value) })}
-            max={passwordOptions.length - (totalMinimums - passwordOptions.minSymbols)}
-         />
-      </div>
-    </>
-  );
 
-  const PassphraseOptionsPanel = () => (
-      <>
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <label htmlFor="wordCount" className="text-slate-200 text-lg">Number of Words</label>
-              <span className="text-emerald-400 text-3xl font-bold">{passphraseOptions.wordCount}</span>
-            </div>
-            <Tooltip text="Drag to change word count (3-8)">
-                <input
-                  type="range"
-                  id="wordCount"
-                  min="3"
-                  max="8"
-                  value={passphraseOptions.wordCount}
-                  onChange={(e) => handlePassphraseOptionsChange({ wordCount: Number(e.target.value) })}
-                  className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb touch-pan-y"
-                />
-            </Tooltip>
-          </div>
-          <div className="mb-6">
-              <label htmlFor="separator" className="text-slate-200 text-lg mb-2 block">Separator Character</label>
-              <input
-                  type="text"
-                  id="separator"
-                  value={passphraseOptions.separator}
-                  onChange={(e) => handlePassphraseOptionsChange({ separator: e.target.value.slice(0, 1) })}
-                  maxLength={1}
-                  className="w-full bg-slate-900/50 border-2 border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-              />
-          </div>
-          <div className="space-y-2">
-             <label htmlFor="capitalize" className="flex items-center py-2 cursor-pointer select-none text-slate-200 text-base sm:text-lg group">
-                <div className="relative flex items-center justify-center w-6 h-6 mr-4 flex-shrink-0">
-                    <input
-                        id="capitalize"
-                        type="checkbox"
-                        checked={passphraseOptions.capitalize}
-                        onChange={(e) => handlePassphraseOptionsChange({ capitalize: e.target.checked })}
-                        className="absolute opacity-0 w-full h-full cursor-pointer peer"
-                    />
-                    <span className="w-6 h-6 bg-slate-900/50 rounded border-2 border-slate-500 peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-focus:ring-emerald-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all duration-200 group-hover:border-slate-400"></span>
-                    <span className="absolute text-white opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none transform scale-50 peer-checked:scale-100">
-                        <CheckIcon className="stroke-current w-4 h-4" />
-                    </span>
-                </div>
-                Capitalize First Letter of Each Word
-            </label>
-             <label htmlFor="includeNumber" className="flex items-center py-2 cursor-pointer select-none text-slate-200 text-base sm:text-lg group">
-                <div className="relative flex items-center justify-center w-6 h-6 mr-4 flex-shrink-0">
-                    <input
-                        id="includeNumber"
-                        type="checkbox"
-                        checked={passphraseOptions.includeNumber}
-                        onChange={(e) => handlePassphraseOptionsChange({ includeNumber: e.target.checked })}
-                        className="absolute opacity-0 w-full h-full cursor-pointer peer"
-                    />
-                    <span className="w-6 h-6 bg-slate-900/50 rounded border-2 border-slate-500 peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-focus:ring-emerald-500 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all duration-200 group-hover:border-slate-400"></span>
-                    <span className="absolute text-white opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none transform scale-50 peer-checked:scale-100">
-                        <CheckIcon className="stroke-current w-4 h-4" />
-                    </span>
-                </div>
-               Include a Random Number
-            </label>
-          </div>
-      </>
-  );
+
+
 
 
   return (
@@ -1130,13 +1145,20 @@ function App() {
                 
                 {generatorType === 'password' && (
                   <div className="animate-fade-in">
-                    {PasswordOptionsPanel()}
+                    <PasswordOptionsPanel 
+                        passwordOptions={passwordOptions}
+                        handlePasswordOptionsChange={handlePasswordOptionsChange}
+                        totalMinimums={totalMinimums}
+                    />
                   </div>
                 )}
                 
                 {generatorType === 'passphrase' && (
                   <div className="animate-fade-in">
-                    {PassphraseOptionsPanel()}
+                    <PassphraseOptionsPanel 
+                        passphraseOptions={passphraseOptions}
+                        handlePassphraseOptionsChange={handlePassphraseOptionsChange}
+                    />
                   </div>
                 )}
 
@@ -1236,12 +1258,23 @@ function App() {
                                 max="50"
                                 value={bulkCount}
                                 onChange={(e) => setBulkCount(Number(e.target.value))}
-                                className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb touch-pan-y"
+                                className="w-full h-2 bg-slate-900/50 rounded-lg appearance-none cursor-pointer range-thumb"
                               />
                           </Tooltip>
                         </div>
 
-                        {bulkGenType === 'password' ? PasswordOptionsPanel() : PassphraseOptionsPanel()}
+                        {bulkGenType === 'password' ? (
+                            <PasswordOptionsPanel 
+                                passwordOptions={passwordOptions}
+                                handlePasswordOptionsChange={handlePasswordOptionsChange}
+                                totalMinimums={totalMinimums}
+                            />
+                        ) : (
+                            <PassphraseOptionsPanel 
+                                passphraseOptions={passphraseOptions}
+                                handlePassphraseOptionsChange={handlePassphraseOptionsChange}
+                            />
+                        )}
 
                         {bulkResults.length > 0 && (
                             <div className="mt-8 pt-6 border-t border-slate-700/50 animate-fade-in">
