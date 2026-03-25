@@ -1465,13 +1465,13 @@ function App() {
         <button
           onClick={() => handleGenerate(false, false)}
           className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-full p-4 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-all duration-300 z-50 group transform hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer"
-          aria-label="Generate Password"
+          aria-label={`Generate ${generatorType === 'passphrase' ? 'Passphrase' : 'Password'}`}
         >
           <RefreshIcon className="w-8 h-8 transition-transform duration-500 group-hover:rotate-180" />
         </button>
       )}
 
-      <Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
+      <Toast message={toastMessage} isVisible={showToast} />
     </main>
   );
 }
