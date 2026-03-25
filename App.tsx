@@ -109,6 +109,9 @@ function App() {
   const [toastMessage, setToastMessage] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const { password, strength, entropy, generatePassword, generatePassphrase, setPassword, updateStrength } = usePasswordGenerator();
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [shuffledText, setShuffledText] = useState('');
+  const shuffleIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const savedHistory = localStorage.getItem('passwordHistory');
@@ -212,9 +215,31 @@ function App() {
     }
 
     if (newPassword) {
-      setPassword(newPassword);
-      updateStrength(generatorType, currentOptions, newPassword);
-      addNewPasswordToHistory(newPassword, generatorType, currentOptions);
+      if (shuffleIntervalRef.current) {
+        clearInterval(shuffleIntervalRef.current);
+      }
+      
+      setIsShuffling(true);
+      const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+      const maxIterations = 10;
+      let iterations = 0;
+      
+      shuffleIntervalRef.current = setInterval(() => {
+        let text = '';
+        for (let i = 0; i < newPassword.length; i++) {
+          text += charset[Math.floor(Math.random() * charset.length)];
+        }
+        setShuffledText(text);
+        iterations++;
+        
+        if (iterations >= maxIterations) {
+          if (shuffleIntervalRef.current) clearInterval(shuffleIntervalRef.current);
+          setIsShuffling(false);
+          setPassword(newPassword);
+          updateStrength(generatorType, currentOptions, newPassword);
+          addNewPasswordToHistory(newPassword, generatorType, currentOptions);
+        }
+      }, 30);
     }
   }, [generatorType, passwordOptions, passphraseOptions, generatePassword, generatePassphrase, setPassword, updateStrength]);
   
@@ -999,8 +1024,8 @@ function App() {
         <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden max-h-[calc(100vh-8rem)]">
             {/* Password Display */}
             <div className="p-4 sm:p-6 flex justify-between items-center flex-shrink-0">
-              <span className={`text-slate-100 text-2xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password ? 'opacity-100 password-glow' : 'opacity-50'}`}>
-                {password || (generatorType === 'bulk' ? 'Bulk Mode' : 'P4$5W0rD!')}
+              <span className={`text-slate-100 text-2xl sm:text-4xl font-bold tracking-wider break-all flex-1 pr-4 transition-opacity ${password || isShuffling ? 'opacity-100 password-glow' : 'opacity-50'} ${isShuffling ? 'font-mono text-emerald-300' : ''}`}>
+                {isShuffling ? shuffledText : (password || (generatorType === 'bulk' ? 'Bulk Mode' : 'P4$5W0rD!'))}
               </span>
               <div className="flex items-center gap-3">
                 <Tooltip text={`Generate new ${generatorType} (Ctrl+G)`} align="right">
