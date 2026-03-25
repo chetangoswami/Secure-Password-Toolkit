@@ -6,7 +6,7 @@ import StrengthIndicator from './components/StrengthIndicator';
 import PasswordHistory from './components/PasswordHistory';
 import Tooltip from './components/Tooltip';
 import Toast from './components/Toast';
-import { CheckIcon, CopyIcon, ArrowRightIcon, RefreshIcon, SparklesIcon, SpinnerIcon, ExportIcon, AuditIcon, EyeIcon, EyeOffIcon, ShieldIcon, WarningIcon, LightbulbIcon, BulkIcon, KeyIcon, GearIcon } from './components/Icons';
+import { CheckIcon, CopyIcon, ArrowRightIcon, RefreshIcon, SparklesIcon, SpinnerIcon, ExportIcon, AuditIcon, EyeIcon, EyeOffIcon, ShieldIcon, WarningIcon, LightbulbIcon, BulkIcon, KeyIcon, GearIcon, ShareIcon } from './components/Icons';
 import { SYMBOL_CHARS } from './constants';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -630,6 +630,21 @@ function App() {
       document.body.removeChild(textArea);
     }
   }, []);
+
+  const handleShare = useCallback(async (textToShare: string) => {
+    if (!textToShare) return;
+    if (navigator.share) {
+      try {
+         await navigator.share({
+           text: textToShare,
+         });
+      } catch (err) {
+         console.warn('Share failed or cancelled:', err);
+      }
+    } else {
+      handleCopyToClipboard(textToShare);
+    }
+  }, [handleCopyToClipboard]);
   
   // Keyboard Shortcuts Handler
   useEffect(() => {
@@ -1055,6 +1070,13 @@ function App() {
                       {isCopied ? <CheckIcon className="text-emerald-400 w-7 h-7 scale-125 transition-all duration-200" /> : <CopyIcon className="text-emerald-400 hover:text-white transition-colors w-7 h-7" />}
                   </button>
                 </Tooltip>
+                {!!navigator.share && (
+                  <Tooltip text="Share password" align="right">
+                    <button onClick={() => handleShare(password)} aria-label="Share password" disabled={!password} className="transition-transform active:scale-90 flex items-center justify-center">
+                        <ShareIcon className="text-emerald-400 hover:text-white transition-colors w-6 h-6" />
+                    </button>
+                  </Tooltip>
+                )}
               </div>
             </div>
 
