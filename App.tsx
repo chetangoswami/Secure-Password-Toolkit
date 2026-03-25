@@ -112,6 +112,14 @@ function App() {
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffledText, setShuffledText] = useState('');
   const shuffleIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (shuffleIntervalRef.current) {
+        clearInterval(shuffleIntervalRef.current);
+      }
+    };
+  }, []);
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const savedHistory = localStorage.getItem('passwordHistory');
@@ -189,7 +197,7 @@ function App() {
     localStorage.setItem('generatorType', generatorType);
   }, [generatorType]);
   
-  const addNewPasswordToHistory = (newPassword: string, type: 'password' | 'passphrase', options: PasswordOptions | PassphraseOptions) => {
+  const addNewPasswordToHistory = useCallback((newPassword: string, type: 'password' | 'passphrase', options: PasswordOptions | PassphraseOptions) => {
     if (!newPassword) return;
     const newHistoryItem: HistoryItem = { 
         password: newPassword, 
@@ -198,7 +206,7 @@ function App() {
         options,
     };
     setHistory(prev => [newHistoryItem, ...prev.filter(p => p.password !== newPassword)].slice(0, 10));
-  };
+  }, []);
   
   const handleGenerate = useCallback(() => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
@@ -250,7 +258,7 @@ function App() {
         }, 30);
       }
     }
-  }, [generatorType, passwordOptions, passphraseOptions, generatePassword, generatePassphrase, setPassword, updateStrength]);
+  }, [generatorType, passwordOptions, passphraseOptions, generatePassword, generatePassphrase, setPassword, updateStrength, addNewPasswordToHistory]);
   
   const handleAiGenerate = async () => {
     if (generatorType === 'audit' || generatorType === 'bulk') return;
