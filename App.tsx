@@ -219,27 +219,36 @@ function App() {
         clearInterval(shuffleIntervalRef.current);
       }
       
-      setIsShuffling(true);
-      const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-      const maxIterations = 10;
-      let iterations = 0;
-      
-      shuffleIntervalRef.current = setInterval(() => {
-        let text = '';
-        for (let i = 0; i < newPassword.length; i++) {
-          text += charset[Math.floor(Math.random() * charset.length)];
-        }
-        setShuffledText(text);
-        iterations++;
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (prefersReducedMotion) {
+        setIsShuffling(false);
+        setPassword(newPassword);
+        updateStrength(generatorType, currentOptions, newPassword);
+        addNewPasswordToHistory(newPassword, generatorType, currentOptions);
+      } else {
+        setIsShuffling(true);
+        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+        const maxIterations = 10;
+        let iterations = 0;
         
-        if (iterations >= maxIterations) {
-          if (shuffleIntervalRef.current) clearInterval(shuffleIntervalRef.current);
-          setIsShuffling(false);
-          setPassword(newPassword);
-          updateStrength(generatorType, currentOptions, newPassword);
-          addNewPasswordToHistory(newPassword, generatorType, currentOptions);
-        }
-      }, 30);
+        shuffleIntervalRef.current = setInterval(() => {
+          let text = '';
+          for (let i = 0; i < newPassword.length; i++) {
+            text += charset[Math.floor(Math.random() * charset.length)];
+          }
+          setShuffledText(text);
+          iterations++;
+          
+          if (iterations >= maxIterations) {
+            if (shuffleIntervalRef.current) clearInterval(shuffleIntervalRef.current);
+            setIsShuffling(false);
+            setPassword(newPassword);
+            updateStrength(generatorType, currentOptions, newPassword);
+            addNewPasswordToHistory(newPassword, generatorType, currentOptions);
+          }
+        }, 30);
+      }
     }
   }, [generatorType, passwordOptions, passphraseOptions, generatePassword, generatePassphrase, setPassword, updateStrength]);
   
